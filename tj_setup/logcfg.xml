@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Конфиг технологического журнала 1С:Предприятие 8.3.
+  Разместить в каталоге, который кластер серверов 1С читает при старте
+  рабочих процессов (обычно рядом с рабочим каталогом кластера,
+  например /home/usr1cv8/.1cv8/1C/1cv8/conf/logcfg.xml, либо путь,
+  заданный переменной окружения 1C_SYSTEM_LOG для сервиса srv1cv8 —
+  уточнить фактическое расположение на конкретном сервере).
+
+  Атрибут history="N" на каждом <log> — это встроенный в 1С механизм
+  автоматической очистки: файлы старше N дней 1С удаляет сама.
+  tj_cleanup.sh — дополнительная страховка поверх этого механизма.
+
+  Duration в событии DBMSSQL указывается в микросекундах.
+  2000000 = 2000 мс (см. TJ_SLOW_QUERY_MS в etc/env.conf).
+-->
+<config xmlns="http://v8.1c.ru/v8/tech-log">
+
+  <!-- Все исключения -->
+  <log location="/var/log/1C/logcfg/excp" history="7">
+    <event>
+      <eq property="Name" value="EXCP"/>
+    </event>
+    <property name="all"/>
+  </log>
+
+  <!-- Медленные запросы к СУБД: дольше TJ_SLOW_QUERY_MS -->
+  <log location="/var/log/1C/logcfg/dbmssql" history="7">
+    <event>
+      <eq property="Name" value="DBMSSQL"/>
+      <gt property="Duration" value="2000000"/>
+    </event>
+    <property name="all"/>
+  </log>
+
+  <!-- Конфликты блокировок на управляемых блокировках 1С -->
+  <log location="/var/log/1C/logcfg/tlock" history="7">
+    <event>
+      <eq property="Name" value="TLOCK"/>
+    </event>
+    <property name="all"/>
+  </log>
+
+  <!-- Конфликты блокировок СУБД (deadlock/lock timeout на стороне PostgreSQL) -->
+  <log location="/var/log/1C/logcfg/tdeadlock" history="7">
+    <event>
+      <eq property="Name" value="TDEADLOCK"/>
+    </event>
+    <property name="all"/>
+  </log>
+
+</config>

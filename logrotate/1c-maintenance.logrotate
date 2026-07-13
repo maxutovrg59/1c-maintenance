@@ -1,0 +1,11 @@
+# Ротация логов регламентных скриптов (не путать с логами самого PostgreSQL/1С).
+# Установка: скопировать в /etc/logrotate.d/1c-maintenance
+
+/opt/1c-maintenance/logs/*.log {
+    daily
+    rotate 14
+    compress
+    missingok
+    notifempty
+    copytruncate
+}

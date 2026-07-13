@@ -1,0 +1,32 @@
+# Регламентные операции 1С + PostgreSQL.
+#
+# Установка (под пользователем, у которого есть права на pg_dump/psql/DROP-CREATE DATABASE
+# для тестового восстановления — обычно это postgres, либо отдельная роль с нужными правами;
+# для rac_health_check.sh пользователю также нужны права на чтение $RAC_BIN):
+#   crontab -u postgres /opt/1c-maintenance/cron/1c-maintenance.cron
+#
+# Все пути абсолютные, скрипты сами подключают /opt/1c-maintenance/etc/env.conf.
+
+# Ежедневный бэкап в 02:00
+0 2 * * * /opt/1c-maintenance/bin/pg_backup.sh
+
+# Проверка целостности свежего бэкапа в 02:30
+30 2 * * * /opt/1c-maintenance/bin/pg_backup_verify.sh
+
+# Анализ технологического журнала за прошедшие сутки в 03:00
+0 3 * * * /opt/1c-maintenance/bin/tj_analyze.sh
+
+# Доп. очистка старых файлов техжурнала в 03:15
+15 3 * * * /opt/1c-maintenance/bin/tj_cleanup.sh
+
+# Состояние PostgreSQL (долгие запросы, блокировки, место) в 08:00 и 14:00
+0 8,14 * * * /opt/1c-maintenance/bin/pg_health_check.sh
+
+# Состояние кластера серверов 1С (rac) в 08:05
+5 8 * * * /opt/1c-maintenance/bin/rac_health_check.sh
+
+# Еженедельное обслуживание (ANALYZE + точечный VACUUM по bloat) — воскресенье 01:00
+0 1 * * 0 /opt/1c-maintenance/bin/pg_maintenance.sh
+
+# Еженедельный тест восстановления бэкапа — воскресенье 04:00
+0 4 * * 0 /opt/1c-maintenance/bin/restore_test.sh
